@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
@@ -24,7 +23,7 @@ interface IAggregatorV3 {
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);
 }
 
-contract Reksadana is ERC20{
+contract Reksadana is ERC20 {
     address uniswapRouter = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
 
     // tokens
@@ -38,22 +37,21 @@ contract Reksadana is ERC20{
 
     constructor() ERC20("Reksadana", "REK") {}
 
-    function totalAsset() public  returns (uint256) {
+    function totalAsset() public returns (uint256) {
         // ambil harga usdc dalam usd
-        (, int256 usdcPrice, , , ) = IAggregatorV3(baseFeed).latestRoundData();
+        (, int256 usdcPrice,,,) = IAggregatorV3(baseFeed).latestRoundData();
 
         // gitung harga wbtc dalam usdc
-        (, int256 wbtcPrice, , , ) = IAggregatorV3(wbtcFeed).latestRoundData();
+        (, int256 wbtcPrice,,,) = IAggregatorV3(wbtcFeed).latestRoundData();
         uint256 wbtcPriceInUsdc = uint256(wbtcPrice) * 1e6 / uint256(usdcPrice);
 
         // hitung harga weth dalam usdc
-        (, int256 wethPrice,,, ) = IAggregatorV3(wethFeed).latestRoundData();
+        (, int256 wethPrice,,,) = IAggregatorV3(wethFeed).latestRoundData();
         uint256 wethPriceInUsdc = uint256(wethPrice) * 1e6 / uint256(usdcPrice);
 
         uint256 totalWethAsset = IERC20(weth).balanceOf(address(this)) * wethPriceInUsdc / 1e18;
         uint256 totalWbtcAsset = IERC20(wbtc).balanceOf(address(this)) * wbtcPriceInUsdc / 1e8;
 
         return totalWbtcAsset + totalWethAsset;
-    
     }
 }

@@ -24,7 +24,7 @@ contract Flashloan {
     address weth = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
     address usdc = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
 
-     function loopingSupply(uint256 supplyAmount, uint256 borrowAmount) external {
+    function loopingSupply(uint256 supplyAmount, uint256 borrowAmount) external {
         IERC20(weth).transferFrom(msg.sender, address(this), supplyAmount);
 
         address[] memory tokens = new address[](1);
@@ -33,7 +33,7 @@ contract Flashloan {
         // Perbaikan: Mengubah tipe data dari address[] ke uint256[]
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = borrowAmount;
-        
+
         IFlashloan(balancerVault).flashLoan(address(this), tokens, amounts, abi.encode(supplyAmount, borrowAmount));
     }
 
@@ -44,38 +44,35 @@ contract Flashloan {
         bytes memory data
     ) external {
         //decode data
-        (uint supplyAmount, uint256 borrowAmount) = abi.decode(data, (uint256, uint256));
-        
+        (uint256 supplyAmount, uint256 borrowAmount) = abi.decode(data, (uint256, uint256));
+
         IERC20(usdc).approve(uniswapRouter, borrowAmount);
 
-         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
-                tokenIn: usdc,
-                tokenOut: weth,
-                fee: 3000,
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: borrowAmount,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: usdc,
+            tokenOut: weth,
+            fee: 3000,
+            recipient: address(this),
+            deadline: block.timestamp,
+            amountIn: borrowAmount,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        });
 
-            // lakukan proses swap
-            uint256 outputWeth = ISwapRouter(uniswapRouter).exactInputSingle(params);
+        // lakukan proses swap
+        uint256 outputWeth = ISwapRouter(uniswapRouter).exactInputSingle(params);
 
-            // supply ke aave
-            uint256 totalEth = supplyAmount + outputWeth;
+        // supply ke aave
+        uint256 totalEth = supplyAmount + outputWeth;
 
-            // supply ke aave
-            IERC20(weth).approve(aave, totalEth);
-            IAave(aave).supply(weth, totalEth, address(this), 0);
+        // supply ke aave
+        IERC20(weth).approve(aave, totalEth);
+        IAave(aave).supply(weth, totalEth, address(this), 0);
 
-            //borrow ke aave
-            IAave(aave).borrow(usdc, borrowAmount, 2, 0, address(this));
+        //borrow ke aave
+        IAave(aave).borrow(usdc, borrowAmount, 2, 0, address(this));
 
-            //bayar flashloan ke balancer
-            IERC20(usdc).transfer(balancerVault, borrowAmount);
-
-
+        //bayar flashloan ke balancer
+        IERC20(usdc).transfer(balancerVault, borrowAmount);
     }
-
 }

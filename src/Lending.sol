@@ -4,8 +4,9 @@ pragma solidity ^0.8.13;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IAave {
-    function supply(address asset, uint256 amount, address onBehalfOf,uint16 referralCode) external;
-    function borrow(address asset, uint256 amount, uint256 interestRateMode,uint16 referralCode, address onBehalfOf) external;
+    function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
+    function borrow(address asset, uint256 amount, uint256 interestRateMode, uint16 referralCode, address onBehalfOf)
+        external;
 }
 
 contract Lending {
@@ -27,5 +28,4 @@ contract Lending {
         // transfer usdc ke msg.sender
         IERC20(usdc).transfer(msg.sender, borrowAmount);
     }
-
 }

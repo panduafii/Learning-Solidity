@@ -19,9 +19,9 @@ contract FlashloanTest is Test {
 
     function test_loopingSupply() public {
         // mock 1 WETH
-        deal(weth, address(this), 1e18);  // Ubah ke 1e18
+        deal(weth, address(this), 1e18); // Ubah ke 1e18
 
-        IERC20(weth).approve(address(flashloan), 1e18);  // Ubah ke 1e18
+        IERC20(weth).approve(address(flashloan), 1e18); // Ubah ke 1e18
 
         flashloan.loopingSupply(1e18, 2350e6);
 

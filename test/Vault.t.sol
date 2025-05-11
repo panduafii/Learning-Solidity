@@ -24,7 +24,7 @@ contract VaultTest is Test {
         usdc.mint(alice, 1000);
         usdc.approve(address(vault), 1000);
         vault.deposit(1000);
-         // cek apakah alice memiliki 1000 shares
+        // cek apakah alice memiliki 1000 shares
         assertEq(vault.balanceOf(alice), 1000);
         vm.stopPrank();
 
@@ -33,9 +33,9 @@ contract VaultTest is Test {
         usdc.mint(bob, 2000);
         usdc.approve(address(vault), 2000);
         vault.deposit(2000);
-         // cek apakah bob memiliki 2000 shares
+        // cek apakah bob memiliki 2000 shares
         assertEq(vault.balanceOf(bob), 2000);
-        vm.stopPrank();     
+        vm.stopPrank();
     }
 
     function test_scenario() public {
@@ -73,7 +73,7 @@ contract VaultTest is Test {
         usdc.approve(address(vault), 1_000_000);
         vault.deposit(1_000_000);
         assertEq(vault.balanceOf(charlie), 750_000);
-        vm.stopPrank();     
+        vm.stopPrank();
 
         // alice withdraw 1_000_000
         vm.startPrank(alice);

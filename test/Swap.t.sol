@@ -17,7 +17,7 @@ contract SwapTest is Test {
     }
 
     function test_swap() public {
-        deal (weth, address(this), 1e18);
+        deal(weth, address(this), 1e18);
 
         // approve ke kontrak swap
         IERC20(weth).approve(address(swap), 1e18);
@@ -26,5 +26,4 @@ contract SwapTest is Test {
 
         assertGt(IERC20(usdc).balanceOf(address(this)), 0);
     }
-    
 }

@@ -20,10 +20,9 @@ contract LendingTest is Test {
         deal(weth, address(this), 1e18);
         IERC20(weth).approve(address(lending), 1e18);
 
-        lending.supplyAndBorrow(1e18, 100e6); //1e18 = 1 * 10^18 = 1 ether   
+        lending.supplyAndBorrow(1e18, 100e6); //1e18 = 1 * 10^18 = 1 ether
 
         assertEq(IERC20(usdc).balanceOf(address(this)), 100e6);
         console.log("usdc balance", IERC20(usdc).balanceOf(address(this)));
     }
-
 }

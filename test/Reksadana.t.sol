@@ -14,7 +14,44 @@ contract ReksadanaTest is Test {
     address wbtc = 0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f;
 
     function setUp() public {
-        vm.createSelectFork("isi_sendiri", 335104419);
+        vm.createSelectFork("https://arb-mainnet.g.alchemy.com/v2/p73f5xUw-PnBOypRat8_mOQgy2j6dZRh", 335104419);
         reksadana = new Reksadana();
+    }
+
+    function test_deposit() public {
+        deal(usdc, address(this), 1000e6);
+        IERC20(usdc).approve(address(reksadana), 1000e6);
+        reksadana.deposit(100e6);
+
+        console.log("total asset: ", reksadana.totalAsset());
+        console.log("total shares: ", IERC20(reksadana).balanceOf(address(this)));
+    }
+
+    function test_withdraw() public {
+        deal(usdc, address(this), 1000e6);
+        IERC20(usdc).approve(address(reksadana), 1000e6);
+        reksadana.deposit(100e6);
+        
+        // withdraw semua shares yang dimiliki user
+        uint256 userShares = IERC20(address(reksadana)).balanceOf(address(this));
+        reksadana.withdraw(userShares);
+        
+        console.log("total usdc: ", IERC20(usdc).balanceOf(address(this)));
+        console.log("total shares: ", IERC20(address(reksadana)).balanceOf(address(this)));
+        assertEq(IERC20(address(reksadana)).balanceOf(address(this)), 0 ); 
+    }
+
+    function test_error_withdraw() public {
+        deal(usdc, address(this), 1000e6);
+        IERC20(usdc).approve(address(reksadana), 1000e6);
+        reksadana.deposit(1000e6);
+
+        // ekspektasi error ZeroAmount
+        vm.expectRevert(Reksadana.ZeroAmount.selector);
+        reksadana.withdraw(0);
+
+        // ekspektasi error InsufficientShares
+        vm.expectRevert(Reksadana.InsufficientShares.selector);
+        reksadana.withdraw(1001e6);
     }
 }

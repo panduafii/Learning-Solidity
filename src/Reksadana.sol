@@ -24,6 +24,14 @@ interface IAggregatorV3 {
 }
 
 contract Reksadana is ERC20 {
+    // Error
+    error ZeroAmount();
+    error InsufficientShares();
+
+    // events 
+    event Deposit(address indexed user, uint256 amount, uint256 shares);
+    event Withdraw(address indexed user, uint256 shares, uint256 amount);
+
     address uniswapRouter = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
 
     // tokens
@@ -41,7 +49,7 @@ contract Reksadana is ERC20 {
         // ambil harga usdc dalam usd
         (, int256 usdcPrice,,,) = IAggregatorV3(baseFeed).latestRoundData();
 
-        // gitung harga wbtc dalam usdc
+        // hitung harga wbtc dalam usdc
         (, int256 wbtcPrice,,,) = IAggregatorV3(wbtcFeed).latestRoundData();
         uint256 wbtcPriceInUsdc = uint256(wbtcPrice) * 1e6 / uint256(usdcPrice);
 
@@ -53,5 +61,112 @@ contract Reksadana is ERC20 {
         uint256 totalWbtcAsset = IERC20(wbtc).balanceOf(address(this)) * wbtcPriceInUsdc / 1e8;
 
         return totalWbtcAsset + totalWethAsset;
+    }
+
+    function deposit(uint256 amount) public {
+        if (amount == 0) revert ZeroAmount();
+
+        uint256 totalAsset = totalAsset();
+        uint256 totalShares = totalSupply();
+
+        uint256 shares = 0;
+        if (totalShares == 0) {
+            shares = amount;
+        } else {
+            shares = amount * totalShares / totalAsset;
+        }
+
+        IERC20(usdc).transferFrom(msg.sender, address(this), amount);
+        _mint(msg.sender, shares);
+
+        //swap
+        uint256 amountIn = amount/2;
+
+        // Swap USDC ke WETH
+
+        // Approve router uniswap untuk menggunakan WETH
+        IERC20(usdc).approve(uniswapRouter, amountIn);
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: usdc, // Ubah dari USDC ke WETH
+            tokenOut: weth, // Ubah dari WETH ke USDC
+            fee: 3000,
+            recipient: address(this),  // Changed from msg.sender to address(this)
+            deadline: block.timestamp,
+            amountIn: amountIn,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        });
+        // Eksekusi swap
+        ISwapRouter(uniswapRouter).exactInputSingle(params);
+
+        //Swap usdc ke wbtc
+        // Approve router uniswap untuk menggunakan WETH
+        IERC20(usdc).approve(uniswapRouter, amountIn);
+        params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: usdc, // Ubah dari USDC ke WETH
+            tokenOut: wbtc, // Ubah dari WETH ke USDC
+            fee: 3000,
+            recipient: address(this),  // Changed from msg.sender to address(this)
+            deadline: block.timestamp,
+            amountIn: amountIn,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        });
+        // Eksekusi swap
+        ISwapRouter(uniswapRouter).exactInputSingle(params);
+
+        emit Deposit(msg.sender, amount, shares);
+    }
+
+    function withdraw(uint256 shares) public {
+        if (shares == 0) revert ZeroAmount();
+        if (shares > balanceOf(msg.sender)) revert InsufficientShares();
+
+        // uint256 totalAsset = totalAsset();
+        uint256 totalShares = totalSupply();
+        uint256 PROPORTION_SCALED = 1e18;
+
+        //hitung proporsi
+        uint256 proportion = (shares * PROPORTION_SCALED) / totalShares;
+
+        uint256 amountWbtc = IERC20(wbtc).balanceOf(address(this)) * proportion / PROPORTION_SCALED;
+        uint256 amountWeth = IERC20(weth).balanceOf(address(this)) * proportion / PROPORTION_SCALED;
+
+        _burn(msg.sender, shares);
+
+        // swap wbtc ke usdc
+        IERC20(wbtc).approve(uniswapRouter, amountWbtc);
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: wbtc, // Ubah dari USDC ke WETH
+            tokenOut: usdc, // Ubah dari WETH ke USDC
+            fee: 3000,
+            recipient: address(this), // Output langsung ke user
+            deadline: block.timestamp,
+            amountIn: amountWbtc,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        });
+        // Eksekusi swap
+        ISwapRouter(uniswapRouter).exactInputSingle(params);
+
+        // swap weth ke usdc
+        IERC20(weth).approve(uniswapRouter, amountWeth);
+        params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: weth, // Ubah dari USDC ke WETH
+            tokenOut: usdc, // Ubah dari WETH ke USDC
+            fee: 3000,
+            recipient: address(this), // Output langsung ke user
+            deadline: block.timestamp,
+            amountIn: amountWeth,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        });
+        ISwapRouter(uniswapRouter).exactInputSingle(params);
+
+        // Transfer semua USDC ke user
+        uint256 amountUsdc = IERC20(usdc).balanceOf(address(this));
+        IERC20(usdc).transfer(msg.sender, amountUsdc);
+
+        emit Withdraw(msg.sender, shares, amountUsdc);
     }
 }

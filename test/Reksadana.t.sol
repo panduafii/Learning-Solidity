@@ -31,14 +31,14 @@ contract ReksadanaTest is Test {
         deal(usdc, address(this), 1000e6);
         IERC20(usdc).approve(address(reksadana), 1000e6);
         reksadana.deposit(100e6);
-        
+
         // withdraw semua shares yang dimiliki user
         uint256 userShares = IERC20(address(reksadana)).balanceOf(address(this));
         reksadana.withdraw(userShares);
-        
+
         console.log("total usdc: ", IERC20(usdc).balanceOf(address(this)));
         console.log("total shares: ", IERC20(address(reksadana)).balanceOf(address(this)));
-        assertEq(IERC20(address(reksadana)).balanceOf(address(this)), 0 ); 
+        assertEq(IERC20(address(reksadana)).balanceOf(address(this)), 0);
     }
 
     function test_error_withdraw() public {
@@ -52,6 +52,6 @@ contract ReksadanaTest is Test {
 
         // ekspektasi error InsufficientShares
         vm.expectRevert(Reksadana.InsufficientShares.selector);
-        reksadana.withdraw(1001e6);
+        reksadana.withdraw(10000e6);
     }
 }

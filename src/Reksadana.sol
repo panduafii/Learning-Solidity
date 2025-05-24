@@ -28,7 +28,7 @@ contract Reksadana is ERC20 {
     error ZeroAmount();
     error InsufficientShares();
 
-    // events 
+    // events
     event Deposit(address indexed user, uint256 amount, uint256 shares);
     event Withdraw(address indexed user, uint256 shares, uint256 amount);
 
@@ -80,7 +80,7 @@ contract Reksadana is ERC20 {
         _mint(msg.sender, shares);
 
         //swap
-        uint256 amountIn = amount/2;
+        uint256 amountIn = amount / 2;
 
         // Swap USDC ke WETH
 
@@ -90,7 +90,7 @@ contract Reksadana is ERC20 {
             tokenIn: usdc, // Ubah dari USDC ke WETH
             tokenOut: weth, // Ubah dari WETH ke USDC
             fee: 3000,
-            recipient: address(this),  // Changed from msg.sender to address(this)
+            recipient: address(this), // Changed from msg.sender to address(this)
             deadline: block.timestamp,
             amountIn: amountIn,
             amountOutMinimum: 0,
@@ -106,7 +106,7 @@ contract Reksadana is ERC20 {
             tokenIn: usdc, // Ubah dari USDC ke WETH
             tokenOut: wbtc, // Ubah dari WETH ke USDC
             fee: 3000,
-            recipient: address(this),  // Changed from msg.sender to address(this)
+            recipient: address(this), // Changed from msg.sender to address(this)
             deadline: block.timestamp,
             amountIn: amountIn,
             amountOutMinimum: 0,
